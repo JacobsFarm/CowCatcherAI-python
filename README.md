@@ -64,7 +64,7 @@ https://www.youtube.com/playlist?list=PLAa1RFX0i2uCmmDactfR1bR208mwl6KY0
    or with command: `git clone -b Dev https://github.com/CowCatcherAI/CowCatcherAI.git`
 
 ### Step 2: Prepare Project
-1. Extract the zip file to a folder of your choice (e.g., `C:\Users\username\Documents\Cowcatcherai`)
+1. Extract the zip file to a folder of your choice (e.g., `C:\Users\username\Documents\Cowcatcher`)
 2. Remember the path to this folder, you'll need to reference it constantly
 
 ### Step 3: Set Up Python Environment
