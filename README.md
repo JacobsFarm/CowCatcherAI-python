@@ -5,7 +5,7 @@
 This fork is based on the very first version of the CowcatcherAI code, originally developed by Jacob's Farm. The code is written entirely in Python and serves as a solid foundation for a variety of AI projects.
 This project is easier to modify due to its Python-based structure and its standalone interface. It is ideal for developers who prefer a flexible and easily editable version — or for pioneers who appreciate the original CowcatcherAI code over the modern implementations.
 
-# official cowcatcherai software https://github.com/CowCatcherAI/CowCatcherAI
+#### official cowcatcherai software https://github.com/CowCatcherAI/CowCatcherAI
 
 **CowCatcher AI** is an open-source computer vision system designed to monitor your herd 24/7. By analyzing live footage from your barn cameras, it automatically detects "mounting" behavior—the primary sign of estrus (heat)—and instantly sends a photo notification to your smartphone via Telegram or combine it with your Home assistant setup.
 
