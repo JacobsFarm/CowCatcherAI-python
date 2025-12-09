@@ -1,7 +1,7 @@
 """
 CowCatcher Script with Threading Optimization and Multi-Chat Support
 Copyright (C) 2025
-latest adjustment 24-november-2025
+latest adjustment 19-november-2025
 
 This program uses YOLOv12 from Ultralytics (https://github.com/ultralytics/ultralytics)
 and is licensed under the terms of the GNU Affero General Public License (AGPL-3.0).
@@ -81,6 +81,7 @@ COLLECTION_TIME = config["global_settings"]["collection_time"]
 MIN_COLLECTION_TIME = config["global_settings"]["min_collection_time"]
 INACTIVITY_STOP_TIME = config["global_settings"]["inactivity_stop_time"]
 cooldown_period = config["global_settings"]["cooldown_period"]
+SEND_STATUS_NOTIFICATIONS = config["global_settings"].get("send_status_notifications", True)
 
 # Telegram settings - PER CAMERA
 BOT_NAME = camera["telegram_bot"]  # Bot naam uit camera settings
@@ -272,7 +273,8 @@ print(f"Telegram images: {'With bounding boxes' if SEND_ANNOTATED_IMAGES else 'W
 print(f"Sound notification every {SOUND_EVERY_N_NOTIFICATIONS} alerts")
 
 start_message = f"📋 Cowcatcher detection script started at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n⚠️ DISCLAIMER: Use at your own risk. This program uses Ultralytics YOLO and is subject to the GNU Affero General Public License v3.0 (AGPL-3.0)."
-send_telegram_message(start_message)
+if SEND_STATUS_NOTIFICATIONS:
+    send_telegram_message(start_message)
 
 def format_timestamp_for_display(ts):
     """Converteer YYYYMMDD naar DD-MM-YYYY formaat voor weergave"""
@@ -523,7 +525,9 @@ finally:
     stop_message += f"Reason: {stop_reason}\n"
     stop_message += f"Failed: {telegram_stats['failed']}"
     
-    _send_telegram_message_sync(stop_message)
-    print("Stop message sent to Telegram")
-
+    if SEND_STATUS_NOTIFICATIONS:
+        _send_telegram_message_sync(stop_message)
+        print("Stop message sent to Telegram")
+    else:
+        print("Stop message skipped (disabled in settings)")
 
