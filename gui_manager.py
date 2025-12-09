@@ -424,6 +424,20 @@ Als 'Show Live Feed' aan staat opent een extra venster zodra de camera draait.
 ❓ HEB JE VRAGEN?
 ———————————————
 Stel gerust al je vragen – ik help je verder!
+
+———————————————
+Licensie
+———————————————
+This program uses YOLOv12 from Ultralytics (https://github.com/ultralytics/ultralytics)
+and is licensed under the terms of the GNU Affero General Public License (AGPL-3.0).
+
+The trained model cowcatcherVx.pt is a derivative work created by training the Ultralytics YOLO framework on a custom dataset.
+There are no changes to the original YOLO source code.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
         """
 
         label = ctk.CTkLabel(scroll, text=help_text, justify="left")
