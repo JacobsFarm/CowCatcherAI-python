@@ -62,8 +62,8 @@ https://www.youtube.com/playlist?list=PLAa1RFX0i2uCmmDactfR1bR208mwl6KY0
 1. Download and install [Anaconda](https://www.anaconda.com/products/distribution)
 2. Download and install [Sublime Text](https://www.sublimetext.com/) (optional)
 3. Download and install [WinRAR](https://www.win-rar.com/) or 7-Zip
-4. Download the latest release of [CowCatcherAI](https://github.com/CowCatcherAI/CowCatcherAI/releases)  
-   or with command: `git clone -b Dev https://github.com/CowCatcherAI/CowCatcherAI.git`
+4. Download the latest release of [CowCatcherAI](https://github.com/JacobsFarm/CowCatcherAI-python/releases)  
+   or with command: `git clone -b https://github.com/JacobsFarm/CowCatcherAI-python.git`
 
 ### Step 2: Prepare Project
 1. Extract the zip file to a folder of your choice (e.g., `C:\Users\username\Documents\Cowcatcher`)
@@ -78,7 +78,7 @@ Open **Anaconda Prompt** and execute the following commands:
 C:
 
 # Go to your project folder
-cd \Users\username\Documents\Cowcatcher
+cd \Users\username\Documents\Cowcatcherai
 
 # Create a new conda environment
 conda create -n cowcatcher python=3.11
@@ -87,7 +87,7 @@ conda create -n cowcatcher python=3.11
 y
 
 # Activate the environment
-conda activate cowcatcher
+conda activate cowcatcherai
 ```
 
 ### Step 4: Install Required Packages
@@ -128,7 +128,7 @@ REM To see version conda in anaconda prompt = echo %CONDA_PREFIX%
 set CONDA_PATH="C:\ProgramData\anaconda3\Scripts\activate.bat"
 set PROJECT_DRIVE=C:
 set PROJECT_FOLDER=CowCatcherAI
-set SCRIPT_NAME=cowcatcher.py
+set SCRIPT_NAME=main_gui.py
 
 REM Execute the script
 call %CONDA_PATH%
