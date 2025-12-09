@@ -5,7 +5,7 @@
       "name": "first camera",
       "rtsp_url": "rtsp://admin:YourPassword123@192.168.100.22:554/h264Preview_01_sub",
       "enabled": true,
-      "show_live_feed": false,	
+      "show_live_feed": false,
       "notify_threshold": 0.87,
       "peak_detection_threshold": 0.89,
       "save_images": true,
@@ -15,23 +15,12 @@
       "id": "camera2",
       "name": "second camera",
       "rtsp_url": "rtsp://admin:YourPassword123@192.168.100.22:554/h264Preview_01_sub",
-      "enabled": true,
+      "enabled": false,
       "show_live_feed": false,
       "notify_threshold": 0.87,
       "peak_detection_threshold": 0.89,
       "save_images": true,
       "telegram_bot": "primairy bot"
-    },
-    {
-      "id": "camera3",
-      "name": "",
-      "rtsp_url": "",
-      "enabled": false,
-      "show_live_feed": false,
-      "notify_threshold": 0.87,
-      "peak_detection_threshold": 0.89,
-      "save_images": false,
-      "telegram_bot": ""
     }
   ],
   "global_settings": {
@@ -45,7 +34,8 @@
     "min_collection_time": 4,
     "inactivity_stop_time": 6,
     "sound_every_n_notifications": 5,
-    "cooldown_period": 40
+    "cooldown_period": 40,
+    "send_status_notifications": true
   },
   "telegram": {
     "bots": [
@@ -73,4 +63,3 @@
       }
     ]
   }
-}
