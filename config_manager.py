@@ -1,0 +1,163 @@
+import json
+import os
+import shutil
+import sys
+
+# Hulpfunctie om het pad van de exe te bepalen
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        # Als we als .exe draaien
+        return os.path.dirname(sys.executable)
+    # Als we als script draaien
+    return os.path.dirname(os.path.abspath(__file__))
+
+CONFIG_FILE = os.path.join(get_base_path(), 'config.json')
+
+class ConfigManager:
+    def __init__(self):
+        self.config = {}
+        self.load_config()
+
+    def load_config(self):
+        """
+        Laad de configuratie. 
+        Als config.json niet bestaat, wordt create_default_config() aangeroepen 
+        om deze aan te maken met de juiste standaardwaarden.
+        """
+        if not os.path.exists(CONFIG_FILE):
+            print(f"'{CONFIG_FILE}' niet gevonden. Nieuw standaardbestand wordt aangemaakt...")
+            self.create_default_config()
+        
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                self.config = json.load(f)
+        except json.JSONDecodeError:
+            print("Fout bij lezen config.json. Backup gemaakt en default geladen.")
+            shutil.copy(CONFIG_FILE, 'config_backup_error.json')
+            self.create_default_config()
+
+    def save_config(self):
+        """Schrijf de huidige status naar config.json."""
+        try:
+            with open(CONFIG_FILE, 'w') as f:
+                json.dump(self.config, f, indent=2)
+            print("Configuratie opgeslagen.")
+        except Exception as e:
+            print(f"Fout bij opslaan config: {e}")
+
+    def create_default_config(self):
+        """Maakt de volledige standaardstructuur aan gebaseerd op jouw template."""
+        default_data = {
+          "cameras": [
+            {
+              "id": "camera1",
+              "name": "first camera",
+              "rtsp_url": "rtsp://admin:YourPassword123@192.168.100.22:554/h264Preview_01_sub",
+              "enabled": True,
+              "show_live_feed": False,
+              "notify_threshold": 0.87,
+              "peak_detection_threshold": 0.89,
+              "save_images": True,
+              "telegram_bot": "primairy bot"
+            },
+            {
+              "id": "camera2",
+              "name": "second camera",
+              "rtsp_url": "rtsp://admin:YourPassword123@192.168.100.22:554/h264Preview_01_sub",
+              "enabled": False,
+              "show_live_feed": False,
+              "notify_threshold": 0.87,
+              "peak_detection_threshold": 0.89,
+              "save_images": True,
+              "telegram_bot": "primairy bot"
+            }
+          ],
+          "global_settings": {
+            "model_path": "cowcatcherVx.pt",
+            "save_threshold": 0.75,
+            "process_every_n_frames": 2,
+            "min_high_confidence_detections": 3,
+            "max_screenshots": 2,
+            "send_annotated_images": True,
+            "collection_time": 50,
+            "min_collection_time": 4,
+            "inactivity_stop_time": 6,
+            "sound_every_n_notifications": 5,
+            "cooldown_period": 40,
+            "send_status_notifications": True
+          },
+          "telegram": {
+            "bots": [
+              {
+                "name": "primairy bot",
+                "token": "YOUR_TELEGRAM_BOT_TOKEN_HERE",
+                "enabled": True
+              },
+              {
+                "name": "secundairy Bot",
+                "token": "YOUR_TELEGRAM_BOT_TOKEN_HERE",
+                "enabled": False
+              }
+            ],
+            "users": [
+              {
+                "name": "Jan de Boer",
+                "chat_id": 123456789,
+                "enabled": True
+              },
+              {
+                "name": "Piet Jansen",
+                "chat_id": 987654321,
+                "enabled": False
+              }
+            ]
+          }
+        }
+        
+        self.config = default_data
+        self.save_config()
+
+    # --- Getters & Setters ---
+    def get_cameras(self):
+        return self.config.get('cameras', [])
+
+    def get_camera_by_id(self, cam_id):
+        for cam in self.config['cameras']:
+            if cam['id'] == cam_id:
+                return cam
+        return None
+
+    def update_camera(self, cam_data):
+        """Update een bestaande camera of voeg toe als ID nieuw is."""
+        for i, cam in enumerate(self.config['cameras']):
+            if cam['id'] == cam_data['id']:
+                self.config['cameras'][i] = cam_data
+                self.save_config()
+                return
+        # Nieuwe camera
+        self.config['cameras'].append(cam_data)
+        self.save_config()
+
+    def delete_camera(self, cam_id):
+        self.config['cameras'] = [c for c in self.config['cameras'] if c['id'] != cam_id]
+        self.save_config()
+
+    def get_global_settings(self):
+        return self.config.get('global_settings', {})
+
+    def update_global_settings(self, settings):
+        self.config['global_settings'] = settings
+        self.save_config()
+
+    def get_telegram_bots(self):
+        return self.config.get('telegram', {}).get('bots', [])
+
+    def get_telegram_users(self):
+        return self.config.get('telegram', {}).get('users', [])
+
+    def update_telegram_config(self, bots, users):
+        if 'telegram' not in self.config:
+            self.config['telegram'] = {}
+        self.config['telegram']['bots'] = bots
+        self.config['telegram']['users'] = users
+        self.save_config()
