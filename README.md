@@ -177,22 +177,26 @@ From now fill in the settings and start
 ## 📁 Project Structure
 
 ```
-CowCatcherAI/
-│
-├── 📁 __pycache__
-├── 📁 icon
-├── 📁 mounting_detections_camera1
-├── 📁 mounting_detections_camera2
-│
-├── 📄 config.json
-├── 🐍 config_manager.py              
-├── ⚙️ Cowcatcherai.batch               
-├── 🐍 cowcatcher_template.py         
-├── 📄 cowcatcherV15.pt            
-├── 🐍 gui_manager.py                
-├── 🐍 main_gui.py                    
-├── 🐍 process_manager.py             
-└── 📄 requirements.txt                
+[Map]CowCatcherAI/
+[Map] cowcatcherai/
+    app.py
+    requirements.txt
+    [Map] data/
+        [Map] mounting_detections_camera1/
+   [Map] gui/
+        gui_manager.py
+        __init__.py
+    [Map] handlers/
+        cowcatcher_template.py
+        __init__.py
+    [Map] logic/
+        config_manager.py
+        process_manager.py
+        __init__.py
+    [Map] settings/
+        config.json
+    [Map] weights/
+        cowcatcherV15.pt
 ```
 ## Other Repo's from the Cowcatcher AI family
 **Main repo
