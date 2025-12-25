@@ -307,7 +307,7 @@ try:
         frame_count += 1
         
         if frame_count % 100 == 0:
-            print(f"Frames: {frame_count} | Queue: {telegram_queue.qsize()} | Sent: {telegram_stats['sent']}", flush=True)
+            print(f"Frames processed: {frame_count} | Queue: {telegram_queue.qsize()} | Sent: {telegram_stats['sent']}", flush=True)
         
         if frame_count % process_every_n_frames == 0:
             results = model.predict(source=frame, classes=[0], conf=0.2, verbose=False)
@@ -436,4 +436,5 @@ finally:
     if SHOW_LIVE_FEED: cv2.destroyAllWindows()
     
     if SEND_STATUS_NOTIFICATIONS and 'stop_reason' in locals():
+
         _send_telegram_message_sync(f"⚠️ Script Stopped: {stop_reason}")
