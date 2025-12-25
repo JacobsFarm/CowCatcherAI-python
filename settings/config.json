@@ -1,0 +1,42 @@
+{
+  "cameras": [
+    {
+      "id": "camera1",
+      "name": "Standaard Camera",
+      "type": "cowcatcher",
+      "rtsp_url": "rtsp://admin:pass@192.168.1.x:554/stream",
+      "enabled": true,
+      "show_live_feed": false,
+      "telegram_bot": "",
+      "notify_threshold": 0.87,
+      "peak_detection_threshold": 0.89,
+      "save_images": true,
+      "model_path": "cowcatcherV15.pt"
+    }
+  ],
+  "cowcatcher_settings": {
+    "master_model_url": "https://github.com/CowCatcherAI/CowCatcherAI/releases/download/modelv-14/cowcatcherV15.pt",
+    "available_models": [],
+    "save_threshold": 0.83,
+    "process_every_n_frames": 2,
+    "min_high_confidence_detections": 3,
+    "max_screenshots": 2,
+    "send_annotated_images": true,
+    "collection_time": 50,
+    "min_collection_time": 4,
+    "inactivity_stop_time": 6,
+    "sound_every_n_notifications": 5,
+    "cooldown_period": 40,
+    "send_status_notifications": true
+  },
+  "calvingcatcher_settings": {
+    "master_model_url": "https://github.com/CowCatcherAI/CowCatcherAI/releases/download/modelv-14/cowcatcherV15.9-seg.pt",
+    "available_models": [],
+    "alert_sensitivity": 0.8,
+    "check_interval": 10
+  },
+  "telegram": {
+    "bots": [],
+    "users": []
+  }
+}
