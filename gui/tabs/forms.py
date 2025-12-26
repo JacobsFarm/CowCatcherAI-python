@@ -165,7 +165,11 @@ class DynamicSettingsFrame(ctk.CTkFrame):
         if len(self.list_cache.get(key, [])) >= 5:
             messagebox.showwarning("Limiet", "Maximaal 5 modellen toegestaan.")
             return
-        f = filedialog.askopenfilename(filetypes=[("Models", "*.pt *.onnx"), ("All", "*.*")])
+    filetypes=[
+        ("Models", "*.pt *.onnx *.engine *.xml *.tflite *.torchscript *.mlpackage *.mlmodel"), 
+        ("All", "*.*")
+        ]
+    )
         if f and f not in self.list_cache[key]:
             self.list_cache[key].append(f)
             self._render_list(frame, key)
@@ -177,4 +181,5 @@ class DynamicSettingsFrame(ctk.CTkFrame):
 
     def _browse_file(self, var):
         f = filedialog.askopenfilename()
+
         if f: var.set(f)
