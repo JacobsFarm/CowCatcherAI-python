@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 
 # INSTELLINGEN
-WATCHDOG_TIMEOUT = 60   
+WATCHDOG_TIMEOUT = 90   
 WATCHDOG_INTERVAL = 5   
 MAX_RETRIES = 5         
 HIBERNATION_TIME = 3600 
@@ -225,5 +225,6 @@ class ProcessManager:
                     del self.hibernating_cameras[cam_id]
                     self.retry_counts[cam_id] = 0
                     threading.Thread(target=self.start_camera, args=(cam_id,)).start()
+
 
             time.sleep(WATCHDOG_INTERVAL)
