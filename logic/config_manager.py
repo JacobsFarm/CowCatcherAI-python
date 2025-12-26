@@ -44,9 +44,8 @@ class ConfigManager:
             print(f"Fout bij opslaan config: {e}")
 
     def create_default_config(self):
-        # URL's definiëren
         COW_URL = "https://github.com/CowCatcherAI/CowCatcherAI/releases/download/modelv-14/cowcatcherV15.pt"
-        CALV_URL = "https://github.com/CowCatcherAI/CowCatcherAI/releases/download/modelv-14/cowcatcherV15.9-seg.pt"
+        CALV_URL = "https://github.com/CowCatcherAI/CowCatcherAI/releases/download/modelv-14/cowcatcherV15.pt"
         
         default_data = {
           "cameras": [
@@ -80,12 +79,12 @@ class ConfigManager:
             "send_status_notifications": True
           },
           "calvingcatcher_settings": {
-            # AANPASSING: Master URL toegevoegd & lijst leeg gemaakt
             "master_model_url": CALV_URL,
-            "available_models": [],
-            
-            "alert_sensitivity": 0.8,
-            "check_interval": 10
+            "available_models": [],            
+            "min_detections": 30,
+            "manual_mode_duration": 15,
+            "manual_mode_interval": 5,
+            "send_notifications": False,
           },
           "telegram": {
             "bots": [],
@@ -96,10 +95,44 @@ class ConfigManager:
         self.config = default_data
         self.save_config()
 
+    # --- Interne helper om modellen gelijk te trekken ---
+    def _fix_available_models(self, settings_key):
+        """Zorgt dat het model uit de master_url in available_models staat als de lijst leeg is."""
+        settings = self.config.get(settings_key, {})
+        master_url = settings.get("master_model_url", "")
+        
+        if master_url and not settings.get("available_models"):
+            model_name = master_url.split('/')[-1]
+            settings["available_models"] = [model_name]
+            self.config[settings_key] = settings
+            # We slaan het niet direct op om recursie te voorkomen bij getters, 
+            # maar het is nu wel aanwezig in het geheugen voor de GUI.
+
     # --- Getters & Setters ---
     def get_cameras(self): return self.config.get('cameras', [])
+    
+    def get_cowcatcher_settings(self): 
+        # Voer de check uit voor CowCatcher
+        self._fix_available_models("cowcatcher_settings")
+        return self.config.get('cowcatcher_settings', {})
+
+    def update_cowcatcher_settings(self, settings):
+        self.config['cowcatcher_settings'] = settings
+        self.save_config()
+
+    def get_calvingcatcher_settings(self): 
+        # Voer de check uit voor CalvingCatcher (Nu gelijk aan CowCatcher)
+        self._fix_available_models("calvingcatcher_settings")
+        return self.config.get('calvingcatcher_settings', {})
+
+    def update_calvingcatcher_settings(self, settings):
+        self.config['calvingcatcher_settings'] = settings
+        self.save_config()
+
+    # Overige methodes blijven ongewijzigd
     def get_camera_by_id(self, cam_id): 
         return next((c for c in self.config.get('cameras', []) if c['id'] == cam_id), None)
+    
     def update_camera(self, cam_data):
         if 'cameras' not in self.config: self.config['cameras'] = []
         for i, cam in enumerate(self.config['cameras']):
@@ -108,18 +141,11 @@ class ConfigManager:
                 self.save_config(); return
         self.config['cameras'].append(cam_data)
         self.save_config()
+
     def delete_camera(self, cam_id):
         self.config['cameras'] = [c for c in self.config['cameras'] if c['id'] != cam_id]
         self.save_config()
-    def get_cowcatcher_settings(self): return self.config.get('cowcatcher_settings', self.config.get('global_settings', {}))
-    def update_cowcatcher_settings(self, settings):
-        self.config['cowcatcher_settings'] = settings
-        if 'global_settings' in self.config: del self.config['global_settings']
-        self.save_config()
-    def get_calvingcatcher_settings(self): return self.config.get('calvingcatcher_settings', {})
-    def update_calvingcatcher_settings(self, settings):
-        self.config['calvingcatcher_settings'] = settings
-        self.save_config()
+
     def get_telegram_bots(self): return self.config.get('telegram', {}).get('bots', [])
     def get_telegram_users(self): return self.config.get('telegram', {}).get('users', [])
     def update_telegram_config(self, bots, users):

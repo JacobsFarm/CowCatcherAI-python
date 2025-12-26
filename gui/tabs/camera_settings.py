@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
+from .rtsp_helper import RTSPHelper
 
 RAL_6002 = "#2D572C"
 
@@ -23,10 +24,21 @@ class CameraSettingsFrame(ctk.CTkFrame):
         self.entry_name = ctk.CTkEntry(self)
         self.entry_name.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
 
+        # --- RTSP URL (Met Helper Knop) ---
         ctk.CTkLabel(self, text="RTSP URL:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
-        self.entry_url = ctk.CTkEntry(self, placeholder_text="rtsp://...")
-        self.entry_url.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
+        
+        rtsp_container = ctk.CTkFrame(self, fg_color="transparent")
+        rtsp_container.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
+        rtsp_container.grid_columnconfigure(0, weight=1)
 
+        self.entry_url = ctk.CTkEntry(rtsp_container, placeholder_text="rtsp://...")
+        self.entry_url.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+
+        self.btn_rtsp_helper = ctk.CTkButton(rtsp_container, text="+", width=30, 
+                                             fg_color=RAL_6002, command=self.open_rtsp_helper)
+        self.btn_rtsp_helper.grid(row=0, column=1)
+
+        # --- Overige velden ---
         ctk.CTkLabel(self, text="Telegram Bot:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
         self.combo_bot = ctk.CTkComboBox(self, values=["Geen"])
         self.combo_bot.grid(row=3, column=1, padx=10, pady=5, sticky="ew")
@@ -57,6 +69,15 @@ class CameraSettingsFrame(ctk.CTkFrame):
         self.btn_del = ctk.CTkButton(self, text="Verwijderen", fg_color="#8B0000", hover_color="#500000", command=self.delete_camera)
         self.btn_del.grid(row=9, column=0, padx=10, pady=20, sticky="w")
 
+    def open_rtsp_helper(self):
+        """Opent de popup om RTSP links te genereren."""
+        RTSPHelper(self, self.fill_rtsp_field)
+
+    def fill_rtsp_field(self, url):
+        """Callback functie voor de RTSPHelper."""
+        self.entry_url.delete(0, "end")
+        self.entry_url.insert(0, url)
+
     def load_camera(self, cam_id):
         self.current_cam_id = cam_id
         cam = self.cfg.get_camera_by_id(cam_id)
@@ -86,23 +107,19 @@ class CameraSettingsFrame(ctk.CTkFrame):
         self.dynamic_vars = {}
         if data is None: data = {}
 
-        # --- STAP 1: Model Selectie (Uniform gemaakt voor beide types) ---
+        # --- STAP 1: Model Selectie ---
         models = []
         if handler_type == "cowcatcher":
             settings = self.cfg.get_cowcatcher_settings()
-            models = settings.get("available_models", []) # Geen hardcoded fallback meer
+            models = settings.get("available_models", [])
         elif handler_type == "calvingcatcher":
             settings = self.cfg.get_calvingcatcher_settings()
             models = settings.get("available_models", [])
 
-        # Huidige model bepalen
         current_model = data.get("model_path", "")
-        
-        # Als current_model leeg is, en er zijn modellen beschikbaar, pak de eerste
         if not current_model and models:
             current_model = models[0]
             
-        # Dropdown toevoegen (deze functie voegt 'current_model' automatisch toe aan de lijst als hij er niet in staat)
         self._add_dropdown("Kies Model:", "model_path", current_model, models, 0)
 
         # --- STAP 2: Specifieke velden per type ---
@@ -112,26 +129,19 @@ class CameraSettingsFrame(ctk.CTkFrame):
             self._add_switch("Save Images", "save_images", data.get("save_images", True), 3)
         
         elif handler_type == "calvingcatcher":
-            self._add_field("Sensitivity:", "alert_sensitivity", data.get("alert_sensitivity", 0.8), float, 1)
-            self._add_field("Check Interval (s):", "check_interval", data.get("check_interval", 10), int, 2)
+            self._add_field("notify threshold:", "notify theshold", data.get("notify theshold", 0.8), float, 1)
+            self._add_field("Check Interval (sec):", "check_interval", data.get("check_interval", 1), int, 2)
 
     def _add_dropdown(self, label, key, current_value, options, row):
         ctk.CTkLabel(self.frame_dynamic, text=label).grid(row=row, column=0, sticky="w", padx=5, pady=2)
-        
-        # BELANGRIJK: Zorg dat de huidige waarde in de opties staat.
-        # Dit zorgt ervoor dat de waarde uit config.json (bijv. "cowcatcherV15.pt") 
-        # zichtbaar is, ook al staat hij nog niet in de 'available_models' lijst.
         if current_value and current_value not in options:
             options.append(current_value)
-        
-        # Als lijst helemaal leeg is, placeholder
         if not options:
             options = ["Geen modellen beschikbaar"]
             
         combo = ctk.CTkComboBox(self.frame_dynamic, values=options)
         combo.set(current_value if current_value else options[0])
         combo.grid(row=row, column=1, sticky="ew", padx=5, pady=2)
-        
         self.dynamic_vars[key] = {'var': combo, 'type': str}
 
     def _add_field(self, label, key, value, dtype, row):
@@ -158,7 +168,6 @@ class CameraSettingsFrame(ctk.CTkFrame):
                 "telegram_bot": self.combo_bot.get(),
                 "type": self.combo_type.get()
             }
-            # Dynamische data toevoegen
             for key, info in self.dynamic_vars.items():
                 val = info['var'].get()
                 if info['type'] == bool: data[key] = bool(val)
@@ -167,7 +176,7 @@ class CameraSettingsFrame(ctk.CTkFrame):
                 else: data[key] = str(val)
 
             self.cfg.update_camera(data)
-            self.refresh_callback() # Sidebar verversen!
+            self.refresh_callback()
             messagebox.showinfo("Succes", "Opgeslagen")
         except ValueError:
             messagebox.showerror("Fout", "Controleer invoer")
@@ -176,4 +185,4 @@ class CameraSettingsFrame(ctk.CTkFrame):
         if not self.current_cam_id: return
         if messagebox.askyesno("Delete", "Verwijderen?"):
             self.cfg.delete_camera(self.current_cam_id)
-            self.refresh_callback() # Sidebar verversen
+            self.refresh_callback()
