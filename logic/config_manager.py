@@ -45,7 +45,7 @@ class ConfigManager:
 
     def create_default_config(self):
         COW_URL = "https://github.com/CowCatcherAI/CowCatcherAI/releases/download/modelv-14/cowcatcherV15.pt"
-        CALV_URL = "https://github.com/CowCatcherAI/CowCatcherAI/releases/download/modelv-14/cowcatcherV15.pt"
+        CALV_URL = "https://github.com/CowCatcherAI/CalvingCatcherAI/releases/download/CalvingcatcherV1/calvingcatcherV1.pt"
         
         default_data = {
           "cameras": [
@@ -84,7 +84,9 @@ class ConfigManager:
             "min_detections": 30,
             "manual_mode_duration": 15,
             "manual_mode_interval": 5,
-            "send_notifications": False,
+            "send_calving_notifications": False,
+            "Calving_screenshots_interval": 30,
+            "send_calving_screenshots": False,
           },
           "telegram": {
             "bots": [],
