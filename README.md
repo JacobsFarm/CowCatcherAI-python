@@ -174,29 +174,40 @@ Upon successful startup, you'll now see an interface
 
 From now fill in the settings and start 
 
-## 📁 Project Structure
+## 📂 Project Structure
 
-```
-[Map]CowCatcherAI/
-[Map] cowcatcherai/
-    app.py
-    requirements.txt
-    [Map] data/
-        [Map] mounting_detections_camera1/
-   [Map] gui/
-        gui_manager.py
-        __init__.py
-    [Map] handlers/
-        cowcatcher_template.py
-        __init__.py
-    [Map] logic/
-        config_manager.py
-        process_manager.py
-        __init__.py
-    [Map] settings/
-        config.json
-    [Map] weights/
-        cowcatcherV15.pt
+```text
+CowCatcherAI-python/
+├── gui/                        # Graphical User Interface components
+│   ├── tabs/                   # Individual UI tabs and layout modules
+│   │   ├── camera_settings.py  # Configuration for camera sources
+│   │   ├── camera_status.py    # Real-time camera connectivity status
+│   │   ├── camera_tab.py       # Main camera viewing interface
+│   │   ├── config_tab.py       # Application settings panel
+│   │   ├── forms.py            # Reusable UI form components
+│   │   ├── rtsp_helper.py      # Utilities for RTSP stream management
+│   │   ├── sub_calving.py      # UI module for calving detection features
+│   │   ├── sub_cowcatcher.py   # UI module for general AI detection
+│   │   └── sub_telegram.py     # Telegram notification settings
+│   ├── main_window.py          # Application main window initialization
+│   └── __init__.py
+├── handlers/                   # Event handling and backend processing
+│   ├── calving_handler.py      # Logic for calving event management
+│   ├── cowcatcher_handler.py   # Logic for core AI detection events
+│   └── __init__.py
+├── icon/                       # Visual assets
+│   └── Cowcatcher48x48.ico     # Application executable icon
+├── logic/                      # Core business logic
+│   ├── config_manager.py       # Handles reading/writing configuration files
+│   ├── process_manager.py      # Manages active threads and sub-processes
+│   └── __init__.py
+├── settings/                   # Configuration storage
+│   └── config.json             # Persistent user settings and parameters
+├── app.py                      # Main entry point to launch the application
+├── requirements.txt            # List of required Python dependencies
+├── run_python_script.bat       # Windows batch script for quick execution
+├── LICENSE                     # License information
+└── README.md                   # Project documentation
 ```
 ## Other Repo's from the Cowcatcher AI family
 **Main repo
@@ -238,4 +249,5 @@ Use at your own risk.
 This software is intended as a tool and does not replace professional knowledge and experience. The AI may give false notifications; the user remains responsible for the final assessment and decision. Physical inspection and identification of the animal remain essential.
 
 Although this solution is designed to be user-friendly and efficient, the underlying technology is not new. The computer vision used is based on YOLO, a proven technique that has been applied for years for object and motion detection. The Telegram notifications also use an existing API. Despite appearing innovative, it involves a smart combination of existing technologies.se positives or negatives; the user remains responsible for all final breeding decisions.
+
 
