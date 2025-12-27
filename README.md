@@ -63,7 +63,7 @@ https://www.youtube.com/playlist?list=PLAa1RFX0i2uCmmDactfR1bR208mwl6KY0
 2. Download and install [Sublime Text](https://www.sublimetext.com/) (optional)
 3. Download and install [WinRAR](https://www.win-rar.com/) or 7-Zip
 4. Download the latest release of [CowCatcherAI](https://github.com/JacobsFarm/CowCatcherAI-python/releases)  
-   or with command: `git clone -b https://github.com/JacobsFarm/CowCatcherAI-python.git`
+   or with command: `git clone https://github.com/JacobsFarm/CowCatcherAI-python.git`
 
 ### Step 2: Prepare Project
 1. Extract the zip file to a folder of your choice (e.g., `C:\Users\username\Documents\Cowcatcher`)
@@ -238,3 +238,4 @@ Use at your own risk.
 This software is intended as a tool and does not replace professional knowledge and experience. The AI may give false notifications; the user remains responsible for the final assessment and decision. Physical inspection and identification of the animal remain essential.
 
 Although this solution is designed to be user-friendly and efficient, the underlying technology is not new. The computer vision used is based on YOLO, a proven technique that has been applied for years for object and motion detection. The Telegram notifications also use an existing API. Despite appearing innovative, it involves a smart combination of existing technologies.se positives or negatives; the user remains responsible for all final breeding decisions.
+
