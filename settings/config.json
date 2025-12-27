@@ -30,10 +30,14 @@
     "send_status_notifications": true
   },
   "calvingcatcher_settings": {
-    "master_model_url": "https://github.com/CowCatcherAI/CowCatcherAI/releases/download/modelv-14/cowcatcherV15.9-seg.pt",
+    "master_model_url": "https://github.com/CowCatcherAI/CalvingCatcherAI/releases/download/CalvingcatcherV1/calvingcatcherV1.pt",
     "available_models": [],
-    "alert_sensitivity": 0.8,
-    "check_interval": 10
+    "min_detections": 30,
+    "manual_mode_duration": 15,
+    "manual_mode_interval": 5,
+    "send_calving_notifications": false,
+    "Calving_screenshots_interval": 30,
+    "send_calving_screenshots": false
   },
   "telegram": {
     "bots": [],
