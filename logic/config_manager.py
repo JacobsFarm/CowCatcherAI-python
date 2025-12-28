@@ -83,7 +83,7 @@ class ConfigManager:
             "available_models": [],            
             "min_detections": 30,
             "manual_mode_duration": 15,
-            "manual_mode_interval": 5,
+            "manual_mode_interval": 30,
             "send_calving_notifications": False,
             "Calving_screenshots_interval": 30,
             "send_calving_screenshots": False,
