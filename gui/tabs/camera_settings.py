@@ -129,8 +129,10 @@ class CameraSettingsFrame(ctk.CTkFrame):
             self._add_switch("Save Images", "save_images", data.get("save_images", True), 3)
         
         elif handler_type == "calvingcatcher":
-            self._add_field("notify threshold:", "notify theshold", data.get("notify theshold", 0.8), float, 1)
-            self._add_field("Check Interval (sec):", "check_interval", data.get("check_interval", 1), int, 2)
+            self._add_field("Save Threshold:", "save_threshold", data.get("save_threshold", 0.80), float, 1)
+            self._add_field("notify threshold:", "notify_threshold", data.get("notify_threshold", 0.87), float, 2)
+            self._add_field("Check Interval (sec):", "check_interval", data.get("check_interval", 1), int, 3)
+
 
     def _add_dropdown(self, label, key, current_value, options, row):
         ctk.CTkLabel(self.frame_dynamic, text=label).grid(row=row, column=0, sticky="w", padx=5, pady=2)
