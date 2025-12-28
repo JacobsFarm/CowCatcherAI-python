@@ -125,7 +125,7 @@ class ProcessManager:
             try:
                 process = subprocess.Popen(
                     cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                    text=True, bufsize=1, creationflags=creation_flags
+                    text=True, bufsize=1, creationflags=creation_flags, encoding='utf-8', errors='replace'
                 )
                 self.processes[camera_id] = process
                 
@@ -225,6 +225,5 @@ class ProcessManager:
                     del self.hibernating_cameras[cam_id]
                     self.retry_counts[cam_id] = 0
                     threading.Thread(target=self.start_camera, args=(cam_id,)).start()
-
 
             time.sleep(WATCHDOG_INTERVAL)
