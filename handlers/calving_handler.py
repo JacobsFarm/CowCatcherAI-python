@@ -83,10 +83,14 @@ if not camera:
 global_settings = config.get("calvingcatcher_settings", {})
 
 # --- SETTINGS ---
-NOTIFY_THRESHOLD = camera.get("notify_threshold", 0.8)
+NOTIFY_THRESHOLD = camera.get("notify_threshold", 0.87)
+SAVE_THRESHOLD = camera.get("save_threshold", 0.80)  # <--- NIEUW: Threshold voor direct opslaan
 CHECK_INTERVAL = camera.get("check_interval", 1)
 RTSP_URL = camera.get("rtsp_url")
 CAMERA_NAME = camera.get("name", "Unknown Camera")
+
+# Interval om flood van save-images te voorkomen (bv. max 1 per 5 sec bij hoge confidence)
+HIGH_CONF_SAVE_INTERVAL = 5 
 
 MIN_DETECTIONS = global_settings.get("min_detections", 30)
 MANUAL_DURATION_MINUTES = global_settings.get("manual_mode_duration", 15)
@@ -233,6 +237,7 @@ processed_count = 0
 last_trigger_time = 0
 last_manual_save = 0
 last_manual_send = 0
+last_threshold_save_time = 0 # <--- NIEUW: Timer voor threshold saves
 detection_counter = 0
 
 try:
@@ -254,11 +259,24 @@ try:
             processed_count += 1
             
             # Run inference
-            results = model.predict(source=frame, conf=NOTIFY_THRESHOLD, verbose=False, classes=[1])
+            # We zetten hier de conf iets lager (bv 0.4) zodat we zelf kunnen filteren voor SAVE vs NOTIFY
+            results = model.predict(source=frame, conf=0.4, verbose=False, classes=[1])
             
             top_conf = 0.0
             if len(results[0].boxes) > 0:
                 top_conf = float(results[0].boxes[0].conf)
+
+            # --- NIEUW: SAVE THRESHOLD LOGICA ---
+            # Als de detectie hoger is dan de save_threshold, sla direct op (onafhankelijk van alarm)
+            if top_conf >= SAVE_THRESHOLD:
+                if (current_time - last_threshold_save_time) >= HIGH_CONF_SAVE_INTERVAL:
+                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    # Bestandsnaam bevat nu ook de confidence score
+                    path = os.path.join(save_folder, f"calving_highconf_{ts}_conf{top_conf:.2f}.jpg")
+                    cv2.imwrite(path, frame)
+                    print(f"💾 High Conf Save ({top_conf:.2f}): {path}")
+                    last_threshold_save_time = current_time
+            # -------------------------------------
 
             if top_conf >= NOTIFY_THRESHOLD:
                 detection_counter += 1
@@ -269,7 +287,7 @@ try:
                         print(f"🚨 DETECTION EVENT (Conf: {top_conf:.2f})")
                         last_trigger_time = current_time 
                         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        path = os.path.join(save_folder, f"calving_{ts}.jpg")
+                        path = os.path.join(save_folder, f"calving_alarm_{ts}.jpg")
                         cv2.imwrite(path, results[0].plot())
 
                         if SEND_CALVING_NOTIFICATIONS:
