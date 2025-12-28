@@ -78,12 +78,14 @@ CAMERA_NAME = camera.get("name", "Nieuwe Camera")
 MIN_DETECTIONS = global_settings.get("min_detections", 30)
 MANUAL_DURATION_MINUTES = global_settings.get("manual_mode_duration", 15)
 MANUAL_DURATION = MANUAL_DURATION_MINUTES * 60
-MANUAL_INTERVAL = global_settings.get("manual_mode_interval", 5)
+MANUAL_INTERVAL = global_settings.get("manual_mode_interval", 30)
+HARDCODED_SAVE_INTERVAL = 10 # hardcoded interval  = multiple from 10
 
 # --- NIEUWE LOGICA INSTELLINGEN ---
 SEND_CALVING_NOTIFICATIONS = global_settings.get("send_calving_notifications", False)
 SEND_CALVING_SCREENSHOTS = global_settings.get("send_calving_screenshots", False)
 SCREENSHOTS_INTERVAL = global_settings.get("Calving_screenshots_interval", 30)
+
 
 # --- MODEL BEPALING ---
 camera_model_file = camera.get("model_path")
@@ -125,7 +127,8 @@ telegram_queue = Queue()
 
 # Globale variabelen
 manual_expiry = None
-last_manual_photo = 0
+last_manual_save = 0
+last_manual_send = 0
 detection_counter = 0
 
 # --- THREADS ---
@@ -284,16 +287,26 @@ try:
 
         # --- HANDMATIGE MONITORING ---
         if manual_expiry:
-            if datetime.now() < manual_expiry:
-                if current_time - last_manual_photo >= MANUAL_INTERVAL:
-                    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    path = os.path.join(manual_save_folder, f"manual_{ts}.jpg")
-                    cv2.imwrite(path, frame)
-                    telegram_queue.put(('photo', path, f"🕒 Check: {CAMERA_NAME}", True))
-                    last_manual_photo = current_time
-            else:
-                manual_expiry = None
-                print("⏹️ Handmatige monitoring verlopen.")
+                    if datetime.now() < manual_expiry:
+                        
+                        # CHECK 1: Opslaan (Elke 10s hardcoded)
+                        if current_time - last_manual_save >= HARDCODED_SAVE_INTERVAL:
+                            ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            path = os.path.join(manual_save_folder, f"manual_{ts}.jpg")
+                            
+                            # Foto opslaan
+                            cv2.imwrite(path, frame)
+                            print(f"📸 Manual save: {path}")
+                            last_manual_save = current_time
+
+                            # CHECK 2: Telegram (Alleen als interval verstreken is)
+                            if current_time - last_manual_send >= MANUAL_INTERVAL:
+                                telegram_queue.put(('photo', path, f"🕒 Check: {CAMERA_NAME}", True))
+                                last_manual_send = current_time
+                                print(f"📤 Foto verzonden naar Telegram (Interval: {MANUAL_INTERVAL}s)")
+                    else:
+                        manual_expiry = None
+                        print("⏹️ Handmatige monitoring verlopen.")
 
 except KeyboardInterrupt:
     print("\nScript gestopt.")
