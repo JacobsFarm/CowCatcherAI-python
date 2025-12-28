@@ -59,74 +59,82 @@ class DynamicSettingsFrame(ctk.CTkFrame):
     #  DE FORMULIER BOUWER
     # ==========================================
     def _build_form(self, settings):
-        row = 0
-        for key, value in settings.items():
-            lbl_text = key.replace("_", " ").title() + ":"
-            
-            # --- STAP 2: DE VERGRENDELDE URL (Master URL) ---
-            if key == "master_model_url":
-                ctk.CTkLabel(self.scroll, text="Standaard Model Link (Master):", anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
+            row = 0
+            for key, value in settings.items():
+                lbl_text = key.replace("_", " ").title() + ":"
                 
-                container = ctk.CTkFrame(self.scroll, fg_color="transparent")
-                container.grid(row=row, column=1, padx=10, pady=5, sticky="ew")
-                
-                # Het invoerveld (Standaard op slot / disabled)
-                var_url = ctk.StringVar(value=str(value))
-                entry_url = ctk.CTkEntry(container, textvariable=var_url, fg_color="#2b2b2b", text_color="gray")
-                entry_url.configure(state="disabled") 
-                entry_url.pack(side="left", fill="x", expand=True, padx=(0, 10))
-                
-                # Checkbox om te ontgrendelen
-                var_unlock = ctk.BooleanVar(value=False)
-                chk_unlock = ctk.CTkCheckBox(container, text="Bewerken", variable=var_unlock, width=80,
-                                             command=lambda e=entry_url, v=var_unlock: self._toggle_entry_lock(e, v))
-                chk_unlock.pack(side="right")
-                
-                self.input_vars[key] = {'type': 'str', 'var': var_url}
-            
-            # --- TYPE: LIJST (Modellen) ---
-            elif isinstance(value, list):
-                ctk.CTkLabel(self.scroll, text=lbl_text, anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
-                self.list_cache[key] = list(value)
-                
-                # AANPASSING: Hier is de "default" forceer-logica verwijderd.
-                # Hij neemt nu gewoon de lijst over zoals die in de config (JSON) staat.
+                # --- NIEUW: SPECIFIEKE DROPDOWN VOOR MANUAL INTERVAL ---
+                if key == "manual_mode_interval":
+                    ctk.CTkLabel(self.scroll, text="Telegram Interval (sec):", anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
+                    
+                    # Genereer lijst: 10, 20, 30 ... 100
+                    values_list = [str(x) for x in range(10, 110, 10)]
+                    
+                    # Huidige waarde moet een string zijn die in de lijst voorkomt
+                    current_val = str(value)
+                    if int(float(current_val)) < 10: current_val = "10" # Fallback als oude config nog op 5 staat
+                    
+                    var = ctk.StringVar(value=current_val)
+                    dropdown = ctk.CTkOptionMenu(self.scroll, values=values_list, variable=var, fg_color=RAL_6002)
+                    dropdown.grid(row=row, column=1, sticky="w", padx=10)
+                    
+                    # We slaan hem op als 'int' zodat _extract_form hem straks goed converteert
+                    self.input_vars[key] = {'type': 'int', 'var': var}
 
-                container = ctk.CTkFrame(self.scroll, fg_color="transparent")
-                container.grid(row=row, column=1, padx=10, pady=5, sticky="ew")
+                # --- STAP 2: DE VERGRENDELDE URL (Master URL) ---
+                elif key == "master_model_url":
+                    # ... (rest van de code blijft identiek aan je originele bestand)
+                    ctk.CTkLabel(self.scroll, text="Standaard Model Link (Master):", anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
+                    
+                    container = ctk.CTkFrame(self.scroll, fg_color="transparent")
+                    container.grid(row=row, column=1, padx=10, pady=5, sticky="ew")
+                    
+                    var_url = ctk.StringVar(value=str(value))
+                    entry_url = ctk.CTkEntry(container, textvariable=var_url, fg_color="#2b2b2b", text_color="gray")
+                    entry_url.configure(state="disabled") 
+                    entry_url.pack(side="left", fill="x", expand=True, padx=(0, 10))
+                    
+                    var_unlock = ctk.BooleanVar(value=False)
+                    chk_unlock = ctk.CTkCheckBox(container, text="Bewerken", variable=var_unlock, width=80,
+                                                 command=lambda e=entry_url, v=var_unlock: self._toggle_entry_lock(e, v))
+                    chk_unlock.pack(side="right")
+                    
+                    self.input_vars[key] = {'type': 'str', 'var': var_url}
                 
-                list_frame = ctk.CTkScrollableFrame(container, height=100, fg_color="transparent", border_width=1)
-                list_frame.pack(fill="x", expand=True)
-                
-                btn_add = ctk.CTkButton(container, text="+ Toevoegen", width=100, fg_color=RAL_6002,
-                                        command=lambda k=key, f=list_frame: self._add_list_item(k, f))
-                btn_add.pack(anchor="w", pady=5)
-                
-                self._render_list(list_frame, key)
-                self.input_vars[key] = {'type': 'list'}
+                # ... (Rest van de IF/ELIF blokken voor list, bool, standaard blijven hetzelfde)
+                elif isinstance(value, list):
+                     # ... (Hetzelfde als origineel)
+                     ctk.CTkLabel(self.scroll, text=lbl_text, anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
+                     self.list_cache[key] = list(value)
+                     container = ctk.CTkFrame(self.scroll, fg_color="transparent")
+                     container.grid(row=row, column=1, padx=10, pady=5, sticky="ew")
+                     list_frame = ctk.CTkScrollableFrame(container, height=100, fg_color="transparent", border_width=1)
+                     list_frame.pack(fill="x", expand=True)
+                     btn_add = ctk.CTkButton(container, text="+ Toevoegen", width=100, fg_color=RAL_6002,
+                                            command=lambda k=key, f=list_frame: self._add_list_item(k, f))
+                     btn_add.pack(anchor="w", pady=5)
+                     self._render_list(list_frame, key)
+                     self.input_vars[key] = {'type': 'list'}
 
-            # --- TYPE: SWITCH (Boolean) ---
-            elif isinstance(value, bool):
-                ctk.CTkLabel(self.scroll, text=lbl_text, anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
-                var = ctk.BooleanVar(value=value)
-                ctk.CTkSwitch(self.scroll, text="Actief", variable=var, progress_color=RAL_6002).grid(row=row, column=1, sticky="w", padx=10)
-                self.input_vars[key] = {'type': 'bool', 'var': var}
+                elif isinstance(value, bool):
+                    # ... (Hetzelfde als origineel)
+                    ctk.CTkLabel(self.scroll, text=lbl_text, anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
+                    var = ctk.BooleanVar(value=value)
+                    ctk.CTkSwitch(self.scroll, text="Actief", variable=var, progress_color=RAL_6002).grid(row=row, column=1, sticky="w", padx=10)
+                    self.input_vars[key] = {'type': 'bool', 'var': var}
 
-            # --- TYPE: STANDAARD (Tekst/Getal) ---
-            else:
-                ctk.CTkLabel(self.scroll, text=lbl_text, anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
-                var = ctk.StringVar(value=str(value))
-                ctk.CTkEntry(self.scroll, textvariable=var).grid(row=row, column=1, sticky="ew", padx=10)
+                else:
+                    # ... (Hetzelfde als origineel)
+                    ctk.CTkLabel(self.scroll, text=lbl_text, anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
+                    var = ctk.StringVar(value=str(value))
+                    ctk.CTkEntry(self.scroll, textvariable=var).grid(row=row, column=1, sticky="ew", padx=10)
+                    if "model" in key and "path" in key:
+                        ctk.CTkButton(self.scroll, text="📂", width=30, 
+                                      command=lambda v=var: self._browse_file(v)).grid(row=row, column=2, padx=5)
+                    dtype = 'int' if isinstance(value, int) else 'float' if isinstance(value, float) else 'str'
+                    self.input_vars[key] = {'type': dtype, 'var': var}
                 
-                # Map icoontje bij paden
-                if "model" in key and "path" in key:
-                    ctk.CTkButton(self.scroll, text="📂", width=30, 
-                                  command=lambda v=var: self._browse_file(v)).grid(row=row, column=2, padx=5)
-
-                dtype = 'int' if isinstance(value, int) else 'float' if isinstance(value, float) else 'str'
-                self.input_vars[key] = {'type': dtype, 'var': var}
-            
-            row += 1
+                row += 1
 
     def _extract_form(self):
         result = {}
