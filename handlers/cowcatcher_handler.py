@@ -35,7 +35,11 @@ def check_and_download_model(model_filename, download_url):
 
     if not os.path.exists(model_local_path):
         print(f"⚠️ Model '{model_filename}' not found locally.")
-        print(f"⬇️ Downloading from: {download_url}...")
+        print(f"⬇️ Starting to download from: {download_url}")
+        print("⏳ Downloading model can take up to multiple minutes...")
+        
+        sys.stdout.flush()
+        time.sleep(0.5)
         
         try:
             response = requests.get(download_url, stream=True)
