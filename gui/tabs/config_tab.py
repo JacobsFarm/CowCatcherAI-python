@@ -10,11 +10,9 @@ class ConfigTab(ctk.CTkFrame):
         super().__init__(parent, fg_color="transparent")
         self.cfg = config_manager
         
-        # --- Layout Opbouw ---
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
         
-        # 1. Sidebar (Links)
         self.sidebar = ctk.CTkFrame(self, width=200, corner_radius=0)
         self.sidebar.grid(row=0, column=0, sticky="nsew")
         self.sidebar.grid_rowconfigure(4, weight=1) 
@@ -30,31 +28,25 @@ class ConfigTab(ctk.CTkFrame):
         self.btn_tele = ctk.CTkButton(self.sidebar, text="Telegram", fg_color="transparent", command=lambda: self.show_view("tele"))
         self.btn_tele.grid(row=3, column=0, padx=10, pady=5, sticky="ew")
 
-        # 2. Content Area (Rechts)
         self.content_area = ctk.CTkFrame(self, fg_color="transparent")
         self.content_area.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 
-        # 3. Sub-modules initialiseren
         self.views = {
             "cow": CowCatcherSettings(self.content_area, self.cfg),
             "calv": CalvingSettings(self.content_area, self.cfg),
             "tele": TelegramSettings(self.content_area, self.cfg)
         }
         
-        # Start scherm
         self.show_view("cow")
 
     def show_view(self, name):
-        # Reset alles
         for view in self.views.values(): view.pack_forget()
         self.btn_cow.configure(fg_color="transparent")
         self.btn_calv.configure(fg_color="transparent")
         self.btn_tele.configure(fg_color="transparent")
 
-        # Toon gekozen
         self.views[name].pack(fill="both", expand=True)
         
-        # Update knop kleur
         if name == "cow": self.btn_cow.configure(fg_color="gray")
         elif name == "calv": self.btn_calv.configure(fg_color="gray")
         elif name == "tele": self.btn_tele.configure(fg_color="gray")

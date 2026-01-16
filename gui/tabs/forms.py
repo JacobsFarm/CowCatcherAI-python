@@ -5,10 +5,6 @@ RAL_6002 = "#2D572C"
 COLOR_GRAY_ITEM = "#404040"
 
 class DynamicSettingsFrame(ctk.CTkFrame):
-    """
-    De 'Motor': Bouwt automatisch formulieren op basis van de config dictionary.
-    Bevat logica voor vergrendelde velden (master_model_url) en interactieve lijsten.
-    """
     def __init__(self, parent, config_manager, settings_key, title):
         super().__init__(parent, fg_color="transparent")
         self.cfg = config_manager
@@ -27,13 +23,14 @@ class DynamicSettingsFrame(ctk.CTkFrame):
         self.scroll.grid(row=0, column=0, sticky="nsew")
         self.scroll.grid_columnconfigure(1, weight=1)
 
-        self.btn_save = ctk.CTkButton(self, text="Opslaan", fg_color=RAL_6002, command=self.save_settings)
+        self.btn_save = ctk.CTkButton(self, text="Save Settings", fg_color=RAL_6002, command=self.save_settings)
         self.btn_save.grid(row=1, column=0, pady=10)
 
         self.refresh_form()
 
     def refresh_form(self):
-        for widget in self.scroll.winfo_children(): widget.destroy()
+        for widget in self.scroll.winfo_children(): 
+            widget.destroy()
         self.input_vars = {}
         self.list_cache = {}
 
@@ -51,40 +48,31 @@ class DynamicSettingsFrame(ctk.CTkFrame):
                 self.cfg.update_cowcatcher_settings(new_settings)
             else:
                 self.cfg.update_calvingcatcher_settings(new_settings)
-            messagebox.showinfo("Succes", f"{self.title} opgeslagen.")
+            messagebox.showinfo("Success", f"{self.title} saved successfully.")
         except ValueError as e:
-            messagebox.showerror("Fout", f"Invoerfout: {e}")
+            messagebox.showerror("Error", f"Input error: {e}")
 
-    # ==========================================
-    #  DE FORMULIER BOUWER
-    # ==========================================
     def _build_form(self, settings):
             row = 0
             for key, value in settings.items():
                 lbl_text = key.replace("_", " ").title() + ":"
                 
-                # --- NIEUW: SPECIFIEKE DROPDOWN VOOR MANUAL INTERVAL ---
                 if key == "manual_mode_interval":
                     ctk.CTkLabel(self.scroll, text="Telegram Interval (sec):", anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
                     
-                    # Genereer lijst: 10, 20, 30 ... 100
                     values_list = [str(x) for x in range(10, 110, 10)]
-                    
-                    # Huidige waarde moet een string zijn die in de lijst voorkomt
                     current_val = str(value)
-                    if int(float(current_val)) < 10: current_val = "10" # Fallback als oude config nog op 5 staat
+                    if int(float(current_val)) < 10: 
+                        current_val = "10"
                     
                     var = ctk.StringVar(value=current_val)
                     dropdown = ctk.CTkOptionMenu(self.scroll, values=values_list, variable=var, fg_color=RAL_6002)
                     dropdown.grid(row=row, column=1, sticky="w", padx=10)
                     
-                    # We slaan hem op als 'int' zodat _extract_form hem straks goed converteert
                     self.input_vars[key] = {'type': 'int', 'var': var}
 
-                # --- STAP 2: DE VERGRENDELDE URL (Master URL) ---
                 elif key == "master_model_url":
-                    # ... (rest van de code blijft identiek aan je originele bestand)
-                    ctk.CTkLabel(self.scroll, text="Standaard Model Link (Master):", anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
+                    ctk.CTkLabel(self.scroll, text="Default Model Link (Master):", anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
                     
                     container = ctk.CTkFrame(self.scroll, fg_color="transparent")
                     container.grid(row=row, column=1, padx=10, pady=5, sticky="ew")
@@ -95,36 +83,32 @@ class DynamicSettingsFrame(ctk.CTkFrame):
                     entry_url.pack(side="left", fill="x", expand=True, padx=(0, 10))
                     
                     var_unlock = ctk.BooleanVar(value=False)
-                    chk_unlock = ctk.CTkCheckBox(container, text="Bewerken", variable=var_unlock, width=80,
+                    chk_unlock = ctk.CTkCheckBox(container, text="Edit", variable=var_unlock, width=80,
                                                  command=lambda e=entry_url, v=var_unlock: self._toggle_entry_lock(e, v))
                     chk_unlock.pack(side="right")
                     
                     self.input_vars[key] = {'type': 'str', 'var': var_url}
                 
-                # ... (Rest van de IF/ELIF blokken voor list, bool, standaard blijven hetzelfde)
                 elif isinstance(value, list):
-                     # ... (Hetzelfde als origineel)
                      ctk.CTkLabel(self.scroll, text=lbl_text, anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
                      self.list_cache[key] = list(value)
                      container = ctk.CTkFrame(self.scroll, fg_color="transparent")
                      container.grid(row=row, column=1, padx=10, pady=5, sticky="ew")
                      list_frame = ctk.CTkScrollableFrame(container, height=100, fg_color="transparent", border_width=1)
                      list_frame.pack(fill="x", expand=True)
-                     btn_add = ctk.CTkButton(container, text="+ Toevoegen", width=100, fg_color=RAL_6002,
+                     btn_add = ctk.CTkButton(container, text="+ Add Item", width=100, fg_color=RAL_6002,
                                             command=lambda k=key, f=list_frame: self._add_list_item(k, f))
                      btn_add.pack(anchor="w", pady=5)
                      self._render_list(list_frame, key)
                      self.input_vars[key] = {'type': 'list'}
 
                 elif isinstance(value, bool):
-                    # ... (Hetzelfde als origineel)
                     ctk.CTkLabel(self.scroll, text=lbl_text, anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
                     var = ctk.BooleanVar(value=value)
-                    ctk.CTkSwitch(self.scroll, text="Actief", variable=var, progress_color=RAL_6002).grid(row=row, column=1, sticky="w", padx=10)
+                    ctk.CTkSwitch(self.scroll, text="Active", variable=var, progress_color=RAL_6002).grid(row=row, column=1, sticky="w", padx=10)
                     self.input_vars[key] = {'type': 'bool', 'var': var}
 
                 else:
-                    # ... (Hetzelfde als origineel)
                     ctk.CTkLabel(self.scroll, text=lbl_text, anchor="w").grid(row=row, column=0, padx=10, pady=5, sticky="nw")
                     var = ctk.StringVar(value=str(value))
                     ctk.CTkEntry(self.scroll, textvariable=var).grid(row=row, column=1, sticky="ew", padx=10)
@@ -148,7 +132,6 @@ class DynamicSettingsFrame(ctk.CTkFrame):
             else: result[key] = str(data['var'].get())
         return result
 
-    # --- HELPERS ---
     def _toggle_entry_lock(self, entry, var):
         if var.get():
             entry.configure(state="normal", fg_color="#343638", text_color="white")
@@ -156,29 +139,28 @@ class DynamicSettingsFrame(ctk.CTkFrame):
             entry.configure(state="disabled", fg_color="#2b2b2b", text_color="gray")
 
     def _render_list(self, scroll_frame, key):
-        for w in scroll_frame.winfo_children(): w.destroy()
+        for w in scroll_frame.winfo_children(): 
+            w.destroy()
         items = self.list_cache.get(key, [])
         
         for item in items:
             row = ctk.CTkFrame(scroll_frame, fg_color=COLOR_GRAY_ITEM)
             row.pack(fill="x", pady=2)
             
-            # AANPASSING: Specifieke "default" rendering is verwijderd.
-            # Gewoon standaard weergave voor alle items:
             ctk.CTkLabel(row, text=item, anchor="w", wraplength=300).pack(side="left", padx=5, fill="x", expand=True)
             ctk.CTkButton(row, text="X", width=30, fg_color="#8B0000", 
                           command=lambda k=key, i=item, f=scroll_frame: self._remove_list_item(k, i, f)).pack(side="right", padx=5, pady=2)
 
     def _add_list_item(self, key, frame):
         if len(self.list_cache.get(key, [])) >= 5:
-            messagebox.showwarning("Limiet", "Maximaal 5 modellen toegestaan.")
+            messagebox.showwarning("Limit", "Maximum of 5 models allowed.")
             return
         f = filedialog.askopenfilename(
-    filetypes=[
-        ("Models", "*.pt *.onnx *.engine *.xml *.tflite *.torchscript *.mlpackage *.mlmodel"), 
-        ("All", "*.*")
-        ]
-    )
+            filetypes=[
+                ("Models", "*.pt *.onnx *.engine *.xml *.tflite *.torchscript *.mlpackage *.mlmodel"), 
+                ("All", "*.*")
+            ]
+        )
         if f and f not in self.list_cache[key]:
             self.list_cache[key].append(f)
             self._render_list(frame, key)
@@ -190,4 +172,5 @@ class DynamicSettingsFrame(ctk.CTkFrame):
 
     def _browse_file(self, var):
         f = filedialog.askopenfilename()
-        if f: var.set(f)
+        if f: 
+            var.set(f)

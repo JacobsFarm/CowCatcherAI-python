@@ -3,7 +3,7 @@ import os
 import shutil
 import sys
 
-# Hulpfunctie om het pad van de ROOT folder te bepalen
+# Helper function to determine the ROOT folder path
 def get_base_path():
     if getattr(sys, 'frozen', False):
         return os.path.dirname(sys.executable)
@@ -23,14 +23,14 @@ class ConfigManager:
             os.makedirs(settings_dir)
 
         if not os.path.exists(CONFIG_FILE):
-            print(f"'{CONFIG_FILE}' niet gevonden. Nieuw bestand wordt aangemaakt...")
+            print(f"'{CONFIG_FILE}' not found. Creating new file...")
             self.create_default_config()
         
         try:
             with open(CONFIG_FILE, 'r') as f:
                 self.config = json.load(f)
         except json.JSONDecodeError:
-            print("Fout bij lezen config.json. Backup gemaakt en default geladen.")
+            print("Error reading config.json. Backup created and default loaded.")
             backup_path = os.path.join(settings_dir, 'config_backup_error.json')
             shutil.copy(CONFIG_FILE, backup_path)
             self.create_default_config()
@@ -39,9 +39,9 @@ class ConfigManager:
         try:
             with open(CONFIG_FILE, 'w') as f:
                 json.dump(self.config, f, indent=2)
-            print("Configuratie opgeslagen.")
+            print("Configuration saved.")
         except Exception as e:
-            print(f"Fout bij opslaan config: {e}")
+            print(f"Error saving config: {e}")
 
     def create_default_config(self):
         COW_URL = "https://github.com/CowCatcherAI/CowCatcherAI/releases/download/modelv-14/cowcatcherV15.pt"
@@ -51,14 +51,13 @@ class ConfigManager:
           "cameras": [
             {
               "id": "camera1",
-              "name": "Standaard Camera",
+              "name": "Default Camera",
               "type": "cowcatcher",
               "rtsp_url": "rtsp://admin:pass@192.168.1.x:554/stream",
               "enabled": True,
               "show_live_feed": False,
               "telegram_bot": "",
               "notify_threshold": 0.87,
-              "peak_detection_threshold": 0.89,
               "save_images": True,
               "model_path": "cowcatcherV15.pt" 
             }
@@ -66,7 +65,7 @@ class ConfigManager:
           "cowcatcher_settings": {
             "master_model_url": COW_URL,
             "available_models": [], 
-            "save_threshold": 0.83,
+            "save_threshold": 0.85,
             "process_every_n_frames": 2,
             "min_high_confidence_detections": 3,
             "max_screenshots": 2,
@@ -97,9 +96,9 @@ class ConfigManager:
         self.config = default_data
         self.save_config()
 
-    # --- Interne helper om modellen gelijk te trekken ---
+    # --- Internal helper to sync models ---
     def _fix_available_models(self, settings_key):
-        """Zorgt dat het model uit de master_url in available_models staat als de lijst leeg is."""
+        """Ensures the model from master_url is in available_models if the list is empty."""
         settings = self.config.get(settings_key, {})
         master_url = settings.get("master_model_url", "")
         
@@ -107,14 +106,14 @@ class ConfigManager:
             model_name = master_url.split('/')[-1]
             settings["available_models"] = [model_name]
             self.config[settings_key] = settings
-            # We slaan het niet direct op om recursie te voorkomen bij getters, 
-            # maar het is nu wel aanwezig in het geheugen voor de GUI.
+            # We do not save immediately to avoid recursion in getters,
+            # but it is now present in memory for the GUI.
 
     # --- Getters & Setters ---
     def get_cameras(self): return self.config.get('cameras', [])
     
     def get_cowcatcher_settings(self): 
-        # Voer de check uit voor CowCatcher
+        # Run check for CowCatcher
         self._fix_available_models("cowcatcher_settings")
         return self.config.get('cowcatcher_settings', {})
 
@@ -123,7 +122,7 @@ class ConfigManager:
         self.save_config()
 
     def get_calvingcatcher_settings(self): 
-        # Voer de check uit voor CalvingCatcher (Nu gelijk aan CowCatcher)
+        # Run check for CalvingCatcher (Now same as CowCatcher)
         self._fix_available_models("calvingcatcher_settings")
         return self.config.get('calvingcatcher_settings', {})
 
@@ -131,7 +130,7 @@ class ConfigManager:
         self.config['calvingcatcher_settings'] = settings
         self.save_config()
 
-    # Overige methodes blijven ongewijzigd
+    # Other methods remain unchanged
     def get_camera_by_id(self, cam_id): 
         return next((c for c in self.config.get('cameras', []) if c['id'] == cam_id), None)
     

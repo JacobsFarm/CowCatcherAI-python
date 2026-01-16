@@ -2,30 +2,23 @@ import customtkinter as ctk
 import sys
 import atexit
 
-# AANPASSING: Correcte imports op basis van de mappenstructuur
 from logic.config_manager import ConfigManager
 from logic.process_manager import ProcessManager
 from gui.main_window import CowCatcherGUI
 
 def main():
-    # Initialiseer Managers
     config_manager = ConfigManager()
     
-    # Maak het hoofdvenster
     app = ctk.CTk()
     app.title("CowCatcher AI")
     app.geometry("1100x700")
     
-    # Process Manager (met callback naar GUI logging later ingesteld)
     process_manager = ProcessManager(config_manager)
     
-    # GUI opbouwen
     gui = CowCatcherGUI(app, config_manager, process_manager)
     
-    # Koppel de log functie van GUI aan ProcessManager
     process_manager.log_callback = gui.append_log
 
-    # Zorg dat alles stopt als GUI sluit
     def on_close():
         process_manager.stop_all()
         app.destroy()

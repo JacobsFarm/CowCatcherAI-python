@@ -6,7 +6,7 @@ import os
 import requests
 from datetime import datetime
 
-# INSTELLINGEN
+# SETTINGS
 WATCHDOG_TIMEOUT = 90   
 WATCHDOG_INTERVAL = 5   
 MAX_RETRIES = 5         
@@ -36,7 +36,7 @@ class ProcessManager:
 
     def _send_watchdog_alert(self, cam_id):
         if self.alert_sent.get(cam_id, False):
-            self.log(cam_id, "ℹ️ Geen nieuw alarm gestuurd (reeds gemeld).")
+            self.log(cam_id, "ℹ️ No new alert sent (already reported).")
             return
 
         def _send():
@@ -51,12 +51,12 @@ class ProcessManager:
                 chat_ids = [u['chat_id'] for u in users if u['enabled']]
                 if not chat_ids: return
 
-                msg = (f"🚨 <b>WATCHDOG ALARM</b> 🚨\n\n"
+                msg = (f"🚨 <b>WATCHDOG ALERT</b> 🚨\n\n"
                        f"Camera: <b>{cam.get('name', cam_id)}</b>\n"
-                       f"Status: 🛑 <b>GESTOPT (Slaapstand)</b>\n\n"
-                       f"De watchdog heeft {MAX_RETRIES} pogingen gedaan. Het is mislukt.\n"
-                       f"Het systeem probeert het over <b>1 uur</b> automatisch opnieuw.\n"
-                       f"Je ontvangt geen verdere meldingen tenzij het lukt.")
+                       f"Status: 🛑 <b>STOPPED (Hibernation)</b>\n\n"
+                       f"The watchdog made {MAX_RETRIES} attempts. Failed.\n"
+                       f"The system will automatically retry in <b>1 hour</b>.\n"
+                       f"You will not receive further notifications unless it succeeds.")
 
                 for chat_id in chat_ids:
                     url = f"https://api.telegram.org/bot{token}/sendMessage"
@@ -64,10 +64,10 @@ class ProcessManager:
                         requests.post(url, data={'chat_id': chat_id, 'text': msg, 'parse_mode': 'HTML'}, timeout=10)
                     except Exception: pass
                 
-                self.log(cam_id, "🚨 Telegram noodbericht verstuurd.")
+                self.log(cam_id, "🚨 Telegram emergency message sent.")
                 
             except Exception as e:
-                self.log(cam_id, f"Fout in telegram alert: {e}")
+                self.log(cam_id, f"Error in telegram alert: {e}")
 
         self.alert_sent[cam_id] = True
         threading.Thread(target=_send, daemon=True).start()
@@ -76,13 +76,13 @@ class ProcessManager:
             if camera_id in self.processes and self.processes[camera_id].poll() is None:
                 return
 
-            # Haal camera configuratie op om het type te bepalen
+            # Retrieve camera configuration to determine type
             cam_config = self.cfg.get_camera_by_id(camera_id)
             if not cam_config:
-                self.log(camera_id, "Fout: Camera configuratie niet gevonden.")
+                self.log(camera_id, "Error: Camera configuration not found.")
                 return
 
-            # BEPAAL WELK SCRIPT MOET DRAAIEN
+            # DETERMINE WHICH SCRIPT TO RUN
             handler_type = cam_config.get("type", "cowcatcher") # Default is cowcatcher
             
             script_name = ""
@@ -91,7 +91,7 @@ class ProcessManager:
             elif handler_type == "calvingcatcher":
                 script_name = "calving_handler.py"
             else:
-                self.log(camera_id, f"Fout: Onbekend handler type '{handler_type}'")
+                self.log(camera_id, f"Error: Unknown handler type '{handler_type}'")
                 return
 
             self.heartbeats[camera_id] = time.time()
@@ -102,18 +102,18 @@ class ProcessManager:
                 del self.hibernating_cameras[camera_id]
 
             if getattr(sys, 'frozen', False):
-                # .EXE MODE (Later relevant als je gaat compileren)
-                # Je zou hier later aparte .exe files voor moeten maken of argumenten meegeven
+                # .EXE MODE (Relevant later for compilation)
+                # You should create separate .exe files or pass arguments here later
                 base_path = os.path.dirname(sys.executable)
                 worker_exe = os.path.join(base_path, "cowcatcher_worker.exe") 
                 cmd = [worker_exe, camera_id]
             else:
-                # SCRIPT MODE (Ontwikkeling)
-                # AANPASSING: Kies dynamisch het script
+                # SCRIPT MODE (Development)
+                # ADJUSTMENT: Choose script dynamically
                 worker_script = os.path.join("handlers", script_name)
                 
                 if not os.path.exists(worker_script):
-                     self.log(camera_id, f"Fout: Script '{worker_script}' niet gevonden.")
+                     self.log(camera_id, f"Error: Script '{worker_script}' not found.")
                      return
                      
                 cmd = [sys.executable, '-u', worker_script, camera_id]
@@ -134,9 +134,9 @@ class ProcessManager:
                 t_out.daemon = True; t_err.daemon = True
                 t_out.start(); t_err.start()
                 
-                self.log(camera_id, f"Proces gestart ({handler_type}) - Poging {self.retry_counts[camera_id]}/{MAX_RETRIES}")
+                self.log(camera_id, f"Process started ({handler_type}) - Attempt {self.retry_counts[camera_id]}/{MAX_RETRIES}")
             except Exception as e:
-                self.log(camera_id, f"Fout bij starten: {str(e)}")
+                self.log(camera_id, f"Error starting: {str(e)}")
 
     def stop_camera(self, camera_id):
         if camera_id in self.heartbeats: del self.heartbeats[camera_id]
@@ -149,7 +149,7 @@ class ProcessManager:
                 try: proc.wait(timeout=5)
                 except subprocess.TimeoutExpired: proc.kill()
             del self.processes[camera_id]
-            self.log(camera_id, "Proces gestopt.")
+            self.log(camera_id, "Process stopped.")
 
     def restart_camera(self, camera_id):
         if camera_id in self.restarting: return
@@ -158,7 +158,7 @@ class ProcessManager:
         current_retries = self.retry_counts.get(camera_id, 0)
         
         if current_retries >= MAX_RETRIES:
-            self.log(camera_id, f"❌ WATCHDOG: Limiet ({MAX_RETRIES}x) bereikt. Camera gaat in slaapstand voor 1 uur.")
+            self.log(camera_id, f"❌ WATCHDOG: Limit ({MAX_RETRIES}x) reached. Camera entering hibernation for 1 hour.")
             self._send_watchdog_alert(camera_id)
             self.stop_camera(camera_id)
             self.hibernating_cameras[camera_id] = time.time()
@@ -166,7 +166,7 @@ class ProcessManager:
             return
 
         self.retry_counts[camera_id] = current_retries + 1
-        self.log(camera_id, f"⚠️ WATCHDOG: Geen reactie. Herstarten (Poging {self.retry_counts[camera_id]})...")
+        self.log(camera_id, f"⚠️ WATCHDOG: No response. Restarting (Attempt {self.retry_counts[camera_id]})...")
         
         if camera_id in self.processes:
             proc = self.processes[camera_id]
@@ -200,7 +200,7 @@ class ProcessManager:
                         self.retry_counts[cam_id] = 0
                     if self.alert_sent.get(cam_id, False):
                         self.alert_sent[cam_id] = False
-                        self.log(cam_id, "✅ Systeem is weer stabiel. Alarm gereset.")
+                        self.log(cam_id, "✅ System is stable again. Alarm reset.")
             else:
                 break
         stream.close()
@@ -213,7 +213,7 @@ class ProcessManager:
                 if cam_id in self.heartbeats and cam_id not in self.restarting:
                     last_seen = self.heartbeats[cam_id]
                     if (current_time - last_seen) > WATCHDOG_TIMEOUT:
-                        msg = f"Watchdog timeout! {int(current_time - last_seen)}s geen activiteit."
+                        msg = f"Watchdog timeout! {int(current_time - last_seen)}s no activity."
                         if self.log_callback: self.log_callback(cam_id, f"[SYSTEM] {msg}")
                         threading.Thread(target=self.restart_camera, args=(cam_id,)).start()
             
@@ -221,7 +221,7 @@ class ProcessManager:
             for cam_id in hibernating_ids:
                 sleep_start = self.hibernating_cameras[cam_id]
                 if (current_time - sleep_start) > HIBERNATION_TIME:
-                    self.log(cam_id, "⏰ Slaapstand voorbij (1 uur). Proberen opnieuw te starten...")
+                    self.log(cam_id, "⏰ Hibernation over (1 hour). Attempting to restart...")
                     del self.hibernating_cameras[cam_id]
                     self.retry_counts[cam_id] = 0
                     threading.Thread(target=self.start_camera, args=(cam_id,)).start()

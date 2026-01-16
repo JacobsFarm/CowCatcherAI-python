@@ -5,9 +5,9 @@ class RTSPHelper(ctk.CTkToplevel):
         super().__init__(parent)
         self.title("Camera RTSP Helper")
         
-        # --- Venster Grootte en Centreren ---
+        # --- Window Size and Centering ---
         width = 450
-        height = 580 # Iets hoger gemaakt voor het extra veld
+        height = 580 # Slightly taller for the extra NVR field
         
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
@@ -21,11 +21,11 @@ class RTSPHelper(ctk.CTkToplevel):
         self.after(100, self.lift)
         self.attributes("-topmost", True)
 
-        # Kleur instellingen
+        # Color settings
         self.color_normal = "#343638"
         self.color_locked = "#151515"
 
-        # Basis paden (worden overschreven door NVR logica indien van toepassing)
+        # Base paths (will be overwritten by NVR logic if applicable)
         self.brands = {
             "Reolink": "/h264Preview_01_main",
             "Dahua": "/cam/realmonitor?channel=1&subtype=0",
@@ -49,14 +49,14 @@ class RTSPHelper(ctk.CTkToplevel):
         
         ctk.CTkLabel(self, text="RTSP Configurator", font=("", 16, "bold")).pack(pady=10)
 
-        # 1. Merk Selectie
-        ctk.CTkLabel(self, text="Selecteer Merk:").pack(pady=(5, 0))
+        # 1. Brand Selection
+        ctk.CTkLabel(self, text="Select Brand:").pack(pady=(5, 0))
         self.brand_var = ctk.StringVar(value="Reolink")
         self.brand_menu = ctk.CTkComboBox(self, values=list(self.brands.keys()), variable=self.brand_var, width=250)
         self.brand_menu.pack(pady=5)
 
-        # 2. IP Adres
-        ctk.CTkLabel(self, text="IP Adres:").pack(pady=(5, 0))
+        # 2. IP Address
+        ctk.CTkLabel(self, text="IP Address:").pack(pady=(5, 0))
         ip_frame = ctk.CTkFrame(self, fg_color="transparent")
         ip_frame.pack(pady=5)
 
@@ -71,13 +71,13 @@ class RTSPHelper(ctk.CTkToplevel):
         self.entry_ip_suffix = ctk.CTkEntry(ip_frame, width=60, placeholder_text="XXX")
         self.entry_ip_suffix.pack(side="left")
 
-        # 3. Wachtwoord
-        ctk.CTkLabel(self, text="Wachtwoord:").pack(pady=(5, 0))
-        self.entry_pass = ctk.CTkEntry(self, placeholder_text="wachtwoord", width=250)
+        # 3. Password
+        ctk.CTkLabel(self, text="Password:").pack(pady=(5, 0))
+        self.entry_pass = ctk.CTkEntry(self, placeholder_text="password", width=250)
         self.entry_pass.pack(pady=5)
 
-        # 4. Gebruikersnaam
-        ctk.CTkLabel(self, text="Gebruikersnaam:").pack(pady=(5, 0))
+        # 4. Username
+        ctk.CTkLabel(self, text="Username:").pack(pady=(5, 0))
         user_frame = ctk.CTkFrame(self, fg_color="transparent")
         user_frame.pack(pady=5)
 
@@ -89,8 +89,8 @@ class RTSPHelper(ctk.CTkToplevel):
         self.entry_user.configure(state="disabled", fg_color=self.color_locked)
         self.entry_user.pack(side="left")
 
-        # 5. Poort
-        ctk.CTkLabel(self, text="Poort (Standaard 554):").pack(pady=(5, 0))
+        # 5. Port
+        ctk.CTkLabel(self, text="Port (Default 554):").pack(pady=(5, 0))
         port_frame = ctk.CTkFrame(self, fg_color="transparent")
         port_frame.pack(pady=5)
 
@@ -102,8 +102,8 @@ class RTSPHelper(ctk.CTkToplevel):
         self.entry_port.configure(state="disabled", fg_color=self.color_locked)
         self.entry_port.pack(side="left")
 
-        # 6. NVR Kanaal (NIEUW)
-        ctk.CTkLabel(self, text="NVR Kanaal:").pack(pady=(5, 0))
+        # 6. NVR Channel
+        ctk.CTkLabel(self, text="NVR Channel:").pack(pady=(5, 0))
         nvr_frame = ctk.CTkFrame(self, fg_color="transparent")
         nvr_frame.pack(pady=5)
 
@@ -111,15 +111,15 @@ class RTSPHelper(ctk.CTkToplevel):
         self.chk_nvr.pack(side="left", padx=(0, 10))
 
         self.entry_nvr = ctk.CTkEntry(nvr_frame, width=200)
-        self.entry_nvr.insert(0, "1") # Standaard op 1
+        self.entry_nvr.insert(0, "1") # Default to channel 1
         self.entry_nvr.configure(state="disabled", fg_color=self.color_locked)
         self.entry_nvr.pack(side="left")
 
-        # Knop
-        self.btn_gen = ctk.CTkButton(self, text="Invoegen in Instellingen", fg_color="#2D572C", command=self.generate)
+        # Button
+        self.btn_gen = ctk.CTkButton(self, text="Insert into Settings", fg_color="#2D572C", command=self.generate)
         self.btn_gen.pack(pady=30)
 
-    # --- Toggle Functies ---
+    # --- Toggle Functions ---
     def toggle_ip_prefix(self):
         if self.chk_ip.get() == 1:
             self.entry_ip_prefix.configure(state="normal", fg_color=self.color_normal)
@@ -147,7 +147,7 @@ class RTSPHelper(ctk.CTkToplevel):
     def generate(self):
         brand = self.brand_var.get()
         
-        # Gegevens ophalen
+        # Collect data
         ip_prefix = self.entry_ip_prefix.get()
         ip_suffix = self.entry_ip_suffix.get()
         full_ip = f"{ip_prefix}{ip_suffix}"
@@ -155,24 +155,23 @@ class RTSPHelper(ctk.CTkToplevel):
         password = self.entry_pass.get()
         port = self.entry_port.get()
         
-        # --- NVR / Kanaal Logica ---
+        # --- NVR / Channel Logic ---
         try:
             channel = int(self.entry_nvr.get())
         except ValueError:
-            channel = 1 # Fallback als er tekst ipv cijfer wordt ingevoerd
+            channel = 1 # Fallback if text is entered instead of a number
 
-        # Hier bepalen we het pad op basis van het merk én het kanaalnummer
+        # Determine path based on brand and channel number
         if brand == "Reolink":
-            # Reolink: /h264Preview_01_main (Let op de leading zero: 01, 02)
+            # Reolink: /h264Preview_01_main (Note the leading zero: 01, 02)
             path = f"/h264Preview_{channel:02d}_main"
             
         elif brand in ["Dahua", "Amcrest", "Swann"]:
-            # Dahua stijl: channel=1, channel=2
+            # Dahua style: channel=1, channel=2
             path = f"/cam/realmonitor?channel={channel}&subtype=0"
             
         elif brand in ["Hikvision", "Annke"]:
-            # Hikvision NVR stijl: 101 (ch1), 201 (ch2), etc.
-            # We plakken het kanaalnummer voor '01'
+            # Hikvision NVR style: 101 (ch1), 201 (ch2), etc.
             path = f"/Streaming/Channels/{channel}01"
             
         elif brand == "Uniview":
@@ -180,10 +179,10 @@ class RTSPHelper(ctk.CTkToplevel):
             path = f"/unicast/c{channel}/s0/live"
             
         else:
-            # Fallback voor merken zonder NVR logica of Custom
+            # Fallback for brands without NVR logic or Custom
             path = self.brands.get(brand, "/")
 
-        # RTSP String bouwen
+        # Build RTSP String
         if user and password:
             rtsp_url = f"rtsp://{user}:{password}@{full_ip}:{port}{path}"
         else:

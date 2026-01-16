@@ -15,7 +15,7 @@ from threading import Thread
 from queue import Queue
 
 # --- PATH SETUP ---
-# Zorg dat we altijd vanuit de root werken, ongeacht waar het script wordt aangeroepen
+# Ensure we always work from the root, regardless of where the script is called
 BASE_DIR = os.getcwd() 
 CONFIG_PATH = os.path.join(BASE_DIR, "settings", "config.json")
 WEIGHTS_DIR = os.path.join(BASE_DIR, "weights")
@@ -24,8 +24,8 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 # --- MODEL DOWNLOADER ---
 def check_and_download_model(model_filename, download_url):
     """
-    Controleert of het model bestaat in de 'weights' map.
-    Zo niet, downloadt het bestand van de opgegeven URL.
+    Checks if the model exists in the 'weights' directory.
+    If not, downloads the file from the provided URL.
     """
     if not os.path.exists(WEIGHTS_DIR):
         os.makedirs(WEIGHTS_DIR)
@@ -80,8 +80,8 @@ if camera is None:
     print(f"ERROR: Camera ID '{CAMERA_ID}' not found in config.")
     sys.exit(1)
 
-# --- READ SETTINGS (CORRECTED MAPPING) ---
-# We gebruiken hier 'cowcatcher_settings' omdat dat in je JSON staat (niet global_settings)
+# --- READ SETTINGS ---
+# We use 'cowcatcher_settings' here because that matches your JSON structure
 cc_settings = config.get("cowcatcher_settings", {})
 
 # Individual camera settings
@@ -89,16 +89,16 @@ CAMERA_NAME = camera.get("name", "Unknown Camera")
 RTSP_URL = camera.get("rtsp_url")
 SHOW_LIVE_FEED = camera.get("show_live_feed", False)
 NOTIFY_THRESHOLD = camera.get("notify_threshold", 0.80)
-PEAK_DETECTION_THRESHOLD = camera.get("peak_detection_threshold", 0.85)
+# PEAK_DETECTION_THRESHOLD removed as requested
 
-# Bepaal welk model we moeten gebruiken
-# 1. Kijk naar specifieke camera model_path
-# 2. Als die leeg is, gebruik de filename uit de master URL (fallback)
+# Determine which model to use
+# 1. Check specific camera model_path
+# 2. If empty, use filename from master URL (fallback)
 camera_model_file = camera.get("model_path")
 master_model_url = cc_settings.get("master_model_url")
 
 if not camera_model_file:
-    # Probeer bestandsnaam uit URL te halen als er niks in de config staat
+    # Try to get filename from URL if nothing is in config
     camera_model_file = master_model_url.split('/')[-1]
 
 # Global settings mapping
@@ -122,24 +122,24 @@ telegram_users = telegram_config.get("users", [])
 TELEGRAM_BOT_TOKEN = None
 TELEGRAM_CHAT_IDS = []
 
-# Probeer Token te vinden (Soft check)
+# Try to find Token (Soft check)
 try:
     if telegram_bots:
         if not BOT_NAME:
-            # Fallback: pak de eerste enabled bot
+            # Fallback: take the first enabled bot
             TELEGRAM_BOT_TOKEN = next(b["token"] for b in telegram_bots if b.get("enabled"))
         else:
             TELEGRAM_BOT_TOKEN = next(b["token"] for b in telegram_bots if b["name"] == BOT_NAME and b.get("enabled"))
 except StopIteration:
-    print(f"⚠️ WAARSCHUWING: Geen actieve Telegram bot gevonden (zocht naar '{BOT_NAME}').")
-    print("   -> Script gaat door zonder notificaties.")
+    print(f"⚠️ WARNING: No active Telegram bot found (searched for '{BOT_NAME}').")
+    print("   -> Script continues without notifications.")
     TELEGRAM_BOT_TOKEN = None
 
-# Laad Chat IDs alleen als er een token is
+# Load Chat IDs only if a token exists
 if TELEGRAM_BOT_TOKEN:
     TELEGRAM_CHAT_IDS = [u["chat_id"] for u in telegram_users if u.get("enabled")]
     if not TELEGRAM_CHAT_IDS:
-        print("⚠️ WAARSCHUWING: Wel een bot, maar geen actieve gebruikers (chat_ids) gevonden.")
+        print("⚠️ WARNING: Bot found, but no active users (chat_ids) found.")
 
 telegram_users = config.get("telegram", {}).get("users", [])
 TELEGRAM_CHAT_IDS = [u["chat_id"] for u in telegram_users if u.get("enabled")]
@@ -148,10 +148,10 @@ TELEGRAM_CHAT_IDS = [u["chat_id"] for u in telegram_users if u.get("enabled")]
 
 print("Starting CowCatcherAI...")
 
-# 1. Zorg dat het model bestaat (download indien nodig)
+# 1. Ensure model exists (download if necessary)
 final_model_path = check_and_download_model(camera_model_file, master_model_url)
 
-# 2. Laad Model
+# 2. Load Model
 print(f"Loading detection model: {final_model_path}")
 model = YOLO(final_model_path, task='detect')
 print("Detection model successfully loaded")
@@ -286,7 +286,6 @@ timestamp_history = deque(maxlen=10)
 collecting_screenshots = False
 collection_start_time = None
 event_detections = []
-peak_detected = False
 inactivity_period = 0
 
 print(f"Processing started, every {process_every_n_frames} frames will be analyzed")
@@ -327,7 +326,7 @@ try:
             current_time = datetime.now()
             timestamp = current_time.strftime("%Y%m%d_%H%M%S")
             
-            # History bijhouden
+            # Maintain history
             confidence_history.append(highest_conf if highest_conf_detection else 0.0)
             frame_history.append(frame.copy())
             timestamp_history.append(timestamp)
@@ -335,15 +334,14 @@ try:
             can_send_notification = (last_detection_time is None or 
                                     (current_time - last_detection_time).total_seconds() > cooldown_period)
             
-            # Start conditie
+            # Start condition
             if highest_conf >= SAVE_THRESHOLD and not collecting_screenshots and can_send_notification:
                 print(f"Starting screenshot collection for {COLLECTION_TIME} seconds")
                 collecting_screenshots = True
                 collection_start_time = current_time
                 event_detections = []
-                peak_detected = False
                 
-                # Voeg historie toe
+                # Add history to event
                 for i in range(len(confidence_history)):
                     if confidence_history[i] >= SAVE_THRESHOLD:
                         hist_frame = frame_history[i]
@@ -355,40 +353,39 @@ try:
                         event_detections.append((hist_conf, None, hist_ts, hist_path, None))
                 
             if collecting_screenshots:
-                # Tijdens collectie
+                # During collection
                 if highest_conf >= SAVE_THRESHOLD:
                     orig_path = os.path.join(save_folder, f"mounting_detected_{timestamp}_conf{highest_conf:.2f}.jpg")
                     cv2.imwrite(orig_path, frame)
                     
-                    # Bewaar resultaat object voor later annoteren
+                    # Save result object for later annotation
                     event_detections.append((highest_conf, None, timestamp, orig_path, results[0]))
                     
                     inactivity_period = 0
                     last_detection_time = current_time
                     
-                    if highest_conf >= PEAK_DETECTION_THRESHOLD and not peak_detected:
-                        peak_detected = True
-                        print(f"Possible peak detected: {highest_conf:.2f}")
+                    # Logic regarding PEAK detection removed here.
+                    # Collection continues until time runs out or inactivity threshold is met.
                 else:
                     if last_detection_time is not None:
                         inactivity_period = (current_time - last_detection_time).total_seconds()
                 
                 collection_duration = (current_time - collection_start_time).total_seconds()
                 
-                # Stop condities
+                # Stop conditions (Updated: Removed Peak check)
                 stop_collection = False
-                if (peak_detected and collection_duration >= MIN_COLLECTION_TIME): stop_collection = True
-                elif collection_duration >= COLLECTION_TIME: stop_collection = True
+                # Original peak check line removed
+                if collection_duration >= COLLECTION_TIME: stop_collection = True
                 elif inactivity_period >= INACTIVITY_STOP_TIME: stop_collection = True
                 
                 if stop_collection:
                     print(f"Collection stopped. Detections: {len(event_detections)}")
                     
-                    # Filter relevante detecties
+                    # Filter relevant detections based on notify_threshold
                     valid_detections = [d for d in event_detections if d[0] >= NOTIFY_THRESHOLD]
                     
                     if len(valid_detections) >= MIN_HIGH_CONFIDENCE_DETECTIONS:
-                        # Sorteer op confidence
+                        # Sort by confidence
                         event_detections.sort(key=lambda x: x[0], reverse=True)
                         top_selection = event_detections[:MAX_SCREENSHOTS]
                         
@@ -398,7 +395,7 @@ try:
                         for idx, (conf, _, ts, orig_path, res_obj) in enumerate(top_selection):
                             final_send_path = orig_path
                             
-                            # Annoteren indien gewenst
+                            # Annotate if desired
                             if SEND_ANNOTATED_IMAGES and res_obj is not None:
                                 annotated_path = orig_path.replace(".jpg", "_annotated.jpg")
                                 annotated_img = res_obj.plot()
@@ -414,7 +411,6 @@ try:
                         last_detection_time = current_time
                     
                     collecting_screenshots = False
-                    peak_detected = False
             
             if SHOW_LIVE_FEED and len(results) > 0:
                 annotated_frame = results[0].plot()
@@ -440,5 +436,4 @@ finally:
     if SHOW_LIVE_FEED: cv2.destroyAllWindows()
     
     if SEND_STATUS_NOTIFICATIONS and 'stop_reason' in locals():
-
         _send_telegram_message_sync(f"⚠️ Script Stopped: {stop_reason}")

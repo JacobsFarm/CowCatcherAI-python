@@ -18,18 +18,18 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 # --- MODEL DOWNLOADER ---
 def check_and_download_model(model_filename, download_url):
     """
-    Checkt of model bestaat. 
-    JA -> Print 'Model found locally' en gaat door.
-    NEE -> Print 'Not found', start download en waarschuwt voor wachttijd.
+    Checks if model exists. 
+    YES -> Prints 'Model found locally' and continues.
+    NO  -> Prints 'Not found', starts download, and warns about wait time.
     """
     if not os.path.exists(WEIGHTS_DIR):
         os.makedirs(WEIGHTS_DIR)
 
     model_local_path = os.path.join(WEIGHTS_DIR, model_filename)
 
-    # HIER gebeurt de check:
+    # Check happens here:
     if not os.path.exists(model_local_path):
-        # Model is er NIET
+        # Model is NOT present
         print(f"⚠️ Model '{model_filename}' not found locally.")
         
         if not download_url:
@@ -53,7 +53,7 @@ def check_and_download_model(model_filename, download_url):
             print(f"❌ ERROR downloading model: {e}")
             sys.exit(1)
     else:
-        # Model is er WEL
+        # Model IS present
         print(f"✅ Model found locally: {model_local_path}")
 
     return model_local_path
@@ -84,12 +84,12 @@ global_settings = config.get("calvingcatcher_settings", {})
 
 # --- SETTINGS ---
 NOTIFY_THRESHOLD = camera.get("notify_threshold", 0.87)
-SAVE_THRESHOLD = camera.get("save_threshold", 0.80)  # <--- NIEUW: Threshold voor direct opslaan
+SAVE_THRESHOLD = camera.get("save_threshold", 0.80)  # <--- NEW: Threshold for direct saving
 CHECK_INTERVAL = camera.get("check_interval", 1)
 RTSP_URL = camera.get("rtsp_url")
 CAMERA_NAME = camera.get("name", "Unknown Camera")
 
-# Interval om flood van save-images te voorkomen (bv. max 1 per 5 sec bij hoge confidence)
+# Interval to prevent flood of save-images (e.g. max 1 per 5 sec at high confidence)
 HIGH_CONF_SAVE_INTERVAL = 5 
 
 MIN_DETECTIONS = global_settings.get("min_detections", 30)
@@ -124,7 +124,7 @@ telegram_queue = Queue()
 
 print("Starting CalvingCatcherAI...")
 
-# 1. Model Check (Downloadt alleen als het nodig is)
+# 1. Model Check (Downloads only if necessary)
 final_model_path = check_and_download_model(camera_model_file, master_model_url)
 
 # 2. Load Model
@@ -139,7 +139,7 @@ except Exception as e:
 # 3. Connect Camera
 print(f"Connecting to camera: {CAMERA_NAME}")
 
-# Mappen maken (stil)
+# Create directories (silently)
 save_folder = os.path.join(DATA_DIR, CAMERA_NAME.replace(" ", "_"))
 os.makedirs(save_folder, exist_ok=True)
 manual_save_folder = os.path.join(DATA_DIR, "manual", CAMERA_ID)
@@ -237,7 +237,7 @@ processed_count = 0
 last_trigger_time = 0
 last_manual_save = 0
 last_manual_send = 0
-last_threshold_save_time = 0 # <--- NIEUW: Timer voor threshold saves
+last_threshold_save_time = 0 # <--- NEW: Timer for threshold saves
 detection_counter = 0
 
 try:
@@ -259,19 +259,19 @@ try:
             processed_count += 1
             
             # Run inference
-            # We zetten hier de conf iets lager (bv 0.4) zodat we zelf kunnen filteren voor SAVE vs NOTIFY
+            # We set conf slightly lower here (e.g. 0.4) so we can filter for SAVE vs NOTIFY ourselves
             results = model.predict(source=frame, conf=0.4, verbose=False, classes=[1])
             
             top_conf = 0.0
             if len(results[0].boxes) > 0:
                 top_conf = float(results[0].boxes[0].conf)
 
-            # --- NIEUW: SAVE THRESHOLD LOGICA ---
-            # Als de detectie hoger is dan de save_threshold, sla direct op (onafhankelijk van alarm)
+            # --- NEW: SAVE THRESHOLD LOGIC ---
+            # If detection is higher than save_threshold, save immediately (independent of alarm)
             if top_conf >= SAVE_THRESHOLD:
                 if (current_time - last_threshold_save_time) >= HIGH_CONF_SAVE_INTERVAL:
                     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    # Bestandsnaam bevat nu ook de confidence score
+                    # Filename now includes the confidence score
                     path = os.path.join(save_folder, f"calving_highconf_{ts}_conf{top_conf:.2f}.jpg")
                     cv2.imwrite(path, frame)
                     print(f"💾 High Conf Save ({top_conf:.2f}): {path}")
