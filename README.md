@@ -188,6 +188,7 @@ CowCatcherAI-python/
 │   │   ├── rtsp_helper.py      # Utilities for RTSP stream management
 │   │   ├── sub_calving.py      # UI module for calving detection features
 │   │   ├── sub_cowcatcher.py   # UI module for general AI detection
+│   │   ├── help.py             # Help function with information
 │   │   └── sub_telegram.py     # Telegram notification settings
 │   ├── main_window.py          # Application main window initialization
 │   └── __init__.py
@@ -249,5 +250,6 @@ Use at your own risk.
 This software is intended as a tool and does not replace professional knowledge and experience. The AI may give false notifications; the user remains responsible for the final assessment and decision. Physical inspection and identification of the animal remain essential.
 
 Although this solution is designed to be user-friendly and efficient, the underlying technology is not new. The computer vision used is based on YOLO, a proven technique that has been applied for years for object and motion detection. The Telegram notifications also use an existing API. Despite appearing innovative, it involves a smart combination of existing technologies.se positives or negatives; the user remains responsible for all final breeding decisions.
+
 
 
